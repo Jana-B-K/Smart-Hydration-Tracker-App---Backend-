@@ -26,7 +26,6 @@ const getTotalForToday = async (userId, day) => {
       },
     },
   ]);
-
   return data.length > 0 ? data[0].total : 0;
 };
 

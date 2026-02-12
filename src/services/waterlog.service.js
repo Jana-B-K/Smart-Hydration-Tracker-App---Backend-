@@ -7,7 +7,7 @@ export const addWaterIntake = async (data) => {
 
 export const updateWaterIntake = async (query, data) => {
   const res = await WaterLog.findOneAndUpdate(query, data, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 

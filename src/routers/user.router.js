@@ -15,4 +15,6 @@ userRouter.put(
     userController.updateUser
 )
 
+userRouter.put('/fcm-token', userController.updateFcmToken);
+
 export default userRouter;

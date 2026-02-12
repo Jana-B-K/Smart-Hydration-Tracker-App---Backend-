@@ -8,7 +8,6 @@ export default function authMiddleware(req, res, next) {
         }
         const decode = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET); 
         req.user = decode;
-        console.log("User verified")
         next();
     
     }catch(err) { 

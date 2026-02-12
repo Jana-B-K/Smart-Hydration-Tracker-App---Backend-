@@ -8,6 +8,8 @@ import authRouter from './routers/auth.router.js';
 import userRouter from './routers/user.router.js';
 import waterLogRouter from './routers/waterlog.router.js';
 import analyticsRouter from './routers/analytics.router.js';
+import reminderRouter from './routers/reminder.router.js';
+import './cron/reminder.cron.js';
 
 const app = express();
 
@@ -24,6 +26,7 @@ app.use('/api/auth', authRouter);
 app.use('/user', authMiddleware, userRouter);
 app.use('/water', authMiddleware, waterLogRouter);
 app.use('/analytics', authMiddleware, analyticsRouter);
+app.use('/reminder', authMiddleware, reminderRouter);
 
 app.use(errorHandler);
 

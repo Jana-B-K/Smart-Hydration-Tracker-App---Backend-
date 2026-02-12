@@ -55,6 +55,9 @@ const UserSchema = new mongoose.Schema(
             type: String,
             enum: ["ml", "oz"],
             default: "ml",
+        },
+        fcmToken: {
+            type: String,
         }
 
     }

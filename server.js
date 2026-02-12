@@ -5,6 +5,9 @@ console.log("app.js loaded")
 
 await connectDB();
 
+// Import cron AFTER DB connected
+await import("./src/cron/reminder.cron.js");
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

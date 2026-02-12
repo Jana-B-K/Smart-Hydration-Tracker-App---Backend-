@@ -24,3 +24,23 @@ export const updateUser = async (req, res, next) => {
         next(err);
     }
 }
+
+export const updateFcmToken = async (req, res, next) => {
+    try {
+        const id = req.user?.id;
+        const { fcmToken } = req.body || {};
+
+        if (!fcmToken || typeof fcmToken !== 'string') {
+            const err = new Error('fcmToken is required');
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const updatedUser = await userService.setFcmToken(id, fcmToken);
+        const userObj = updatedUser.toObject();
+        delete userObj.password;
+        res.status(200).json(userObj);
+    } catch (err) {
+        next(err);
+    }
+}

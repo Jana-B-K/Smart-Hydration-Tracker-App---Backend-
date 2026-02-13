@@ -4,33 +4,49 @@ import User from '../models/user.model.js';
 import getStartDay from '../utils/date.js';
 import getTotalForToday from '../utils/getTotalForToday.js';
 import { sendPushNotification } from '../services/fcm.service.js';
-import { shouldSendReminder } from '../services/reminder.service.js';
+import { evaluateReminder } from '../services/reminder.service.js';
 
-cron.schedule('*/1 * * * *', async () => {
+const debugReminder = process.env.DEBUG_REMINDER === 'true';
+
+cron.schedule('*/10 * * * * *', async () => {
   try {
+    if (debugReminder) {
+      console.log('[REMINDER_CRON] tick');
+    }
     const reminders = await Reminder.find({ isActive: true });
 
     for (const reminder of reminders) {
       const user = await User.findById(reminder.userId);
       if (!user) {
+        if (debugReminder) {
+          console.log(`[REMINDER_CRON] skipped reminder=${reminder._id}: user not found`);
+        }
         continue;
       }
 
       const today = getStartDay();
       const totalForToday = await getTotalForToday(user._id, today);
-      const send = await shouldSendReminder(reminder, user, totalForToday);
+      const { send, reason } = await evaluateReminder(reminder, user, totalForToday);
 
       if (!send) {
+        if (debugReminder) {
+          console.log(`[REMINDER_CRON] skipped reminder=${reminder._id}: ${reason}`);
+        }
         continue;
       }
-
       const delivered = await sendPushNotification(user.fcmToken);
       if (!delivered) {
+        if (debugReminder) {
+          console.log(`[REMINDER_CRON] delivery failed reminder=${reminder._id}`);
+        }
         continue;
       }
 
       reminder.lastReminderSent = new Date();
       await reminder.save();
+      if (debugReminder) {
+        console.log(`[REMINDER_CRON] delivered reminder=${reminder._id}`);
+      }
     }
   } catch (err) {
     console.error('Reminder cron failed:', err.message);

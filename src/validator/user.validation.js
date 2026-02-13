@@ -39,10 +39,10 @@ export const registerValidation = [
         .withMessage("climate is required")
         .isIn(["cold", "hot", "moderate"])
         .withMessage("climate must be cold, hot, or moderate"),
-    body("pregnancy")
+    body("userType")
         .optional()
-        .isBoolean()
-        .withMessage("pregnancy must be boolean"),
+        .isIn(["Athlete", "Office worker", "Outdoor worker", "Pregnant", "Senior citizen"])
+        .withMessage("userType must be one of: Athlete, Office worker, Outdoor worker, Pregnant, Senior citizen"),
     
 ]
 
@@ -83,8 +83,8 @@ export const updateUserValidation = [
         .optional()
         .isIn(["cold", "hot", "moderate"])
         .withMessage("climate must be cold, hot, or moderate"),
-    body("pregnancy")
+    body("userType")
         .optional()
-        .isBoolean()
-        .withMessage("pregnancy must be boolean"),
+        .isIn(["Athlete", "Office worker", "Outdoor worker", "Pregnant", "Senior citizen"])
+        .withMessage("userType must be one of: Athlete, Office worker, Outdoor worker, Pregnant, Senior citizen"),
 ]

@@ -1,10 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { hashPassword, comparePassword } from '../middleware/helper.js';
 import Users from '../models/user.model.js';
+import { getUserTypeConfig } from '../utils/profileAdjustments.js';
 
 function calculateDailyWaterIntake(data){
     
-    let { weight, gender, activity, climate, pregnancy } = data;
+    let { weight, gender, activity, climate, userType } = data;
 
     // 1. Base water (liters)
     let water = weight * 0.033;
@@ -25,10 +26,10 @@ function calculateDailyWaterIntake(data){
     };
     water += climateMap[climate] ?? 0;
 
-    // 4. Pregnancy adjustment
-    if (pregnancy === true && gender === "female") {
-      water += 0.7;
-    }
+    // 4. Profile adjustment
+    const { baseAdd, multiplier } = getUserTypeConfig(userType);
+    water += baseAdd;
+    water *= multiplier;
 
     // 5. Gender adjustment (small, optional)
     if (gender === "male") {

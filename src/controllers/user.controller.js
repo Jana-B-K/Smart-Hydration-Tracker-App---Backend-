@@ -37,6 +37,7 @@ export const updateFcmToken = async (req, res, next) => {
         }
 
         const updatedUser = await userService.setFcmToken(id, fcmToken);
+        console.log(updatedUser.fcmToken)
         const userObj = updatedUser.toObject();
         delete userObj.password;
         res.status(200).json(userObj);

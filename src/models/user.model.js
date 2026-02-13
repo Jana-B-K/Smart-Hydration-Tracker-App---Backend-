@@ -45,8 +45,9 @@ const UserSchema = new mongoose.Schema(
             enum: ["cold", "hot", "moderate"],
             dafault: "moderate",
         },
-        pregnancy:{
-            type: Boolean,
+        userType: {
+            type: String,
+            enum: ["Athlete", "Office worker", "Outdoor worker", "Pregnant", "Senior citizen"],
         },
         dailyGoal: {
             type: Number,

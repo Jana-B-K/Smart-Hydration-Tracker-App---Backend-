@@ -1,4 +1,6 @@
 import Reminder from '../models/reminder.model.js';
+import User from '../models/user.model.js';
+import { getUserTypeConfig } from '../utils/profileAdjustments.js';
 
 function timeToMinutes(timeStr) {
   const [h, m] = String(timeStr).split(':').map(Number);
@@ -32,6 +34,12 @@ function buildNotFoundError(message) {
 }
 
 export const addReminder = async (data) => {
+  if (data.interval == null) {
+    const user = await User.findById(data.userId).select('userType');
+    const { reminderInterval } = getUserTypeConfig(user?.userType);
+    data.interval = reminderInterval;
+  }
+
   const reminder = await Reminder.findOneAndUpdate(
     { userId: data.userId },
     data,
@@ -69,10 +77,9 @@ export const getReminder = async (userId) => {
   return reminder;
 };
 
-export const pauseReminder = async (userId, minutes = 60) => {
-  const pauseMinutes = Number(minutes);
-  if (!Number.isFinite(pauseMinutes) || pauseMinutes <= 0) {
-    const err = new Error('minutes must be a positive number');
+export const pauseReminder = async (userId, paused = false) => {
+  if (typeof paused !== 'boolean') {
+    const err = new Error('paused must be boolean');
     err.statusCode = 400;
     throw err;
   }
@@ -82,7 +89,7 @@ export const pauseReminder = async (userId, minutes = 60) => {
     throw buildNotFoundError('Reminder not found for this user');
   }
 
-  reminder.pausedUntil = new Date(Date.now() + pauseMinutes * 60 * 1000);
+  reminder.paused = paused;
   await reminder.save();
   return reminder;
 };
@@ -99,23 +106,42 @@ export const toggleSleepMode = async (userId) => {
 };
 
 export const shouldSendReminder = async (reminder, user, todayIntake = 0) => {
-  if (!reminder || !user) return false;
-  if (!reminder.isActive) return false;
-  if (reminder.sleepMode) return false;
+  console.log("should send reminder")
+  const { send } = await evaluateReminder(reminder, user, todayIntake);
+  return send;
+};
 
-  if (reminder.pausedUntil && new Date() < reminder.pausedUntil) return false;
-  if (!isWithinSchedule(reminder.startTime, reminder.endTime)) return false;
+export const evaluateReminder = async (reminder, user, todayIntake = 0) => {
+  if (!reminder || !user) {
+    return { send: false, reason: 'missing reminder or user' };
+  }
+  if (!reminder.isActive) {
+    return { send: false, reason: 'reminder inactive' };
+  }
+  if (reminder.sleepMode) {
+    return { send: false, reason: 'sleep mode enabled' };
+  }
+  if (reminder.paused) {
+    return { send: false, reason: 'reminder paused' };
+  }
+  if (!isWithinSchedule(reminder.startTime, reminder.endTime)) {
+    return { send: false, reason: 'outside schedule window' };
+  }
 
-  if (typeof user.dailyGoal === 'number' && todayIntake >= user.dailyGoal) {
-    return false;
+  const dailyGoal = Number(user.dailyGoal);
+  if (Number.isFinite(dailyGoal) && dailyGoal > 0 && todayIntake >= dailyGoal) {
+    return {
+      send: false,
+      reason: `daily goal reached (${todayIntake}/${dailyGoal})`,
+    };
   }
 
   if (reminder.lastReminderSent) {
     const diffMinutes = (Date.now() - new Date(reminder.lastReminderSent).getTime()) / (1000 * 60);
     if (diffMinutes < reminder.interval) {
-      return false;
+      return { send: false, reason: 'interval not reached yet' };
     }
   }
 
-  return true;
+  return { send: true, reason: null };
 };

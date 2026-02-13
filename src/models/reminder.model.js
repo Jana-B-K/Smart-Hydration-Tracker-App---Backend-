@@ -33,11 +33,13 @@ const ReminderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    paused: {
+      type: Boolean,
+      default: false,
+    },
     lastReminderSent: {
       type: Date,
-    },
-    pausedUntil: {
-      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

@@ -37,12 +37,19 @@ function initializeFirebase() {
 initializeFirebase();
 
 export async function sendPushNotification(token) {
-  // if (process.env.MOCK_FCM === 'true') {
-  //   console.log('[MOCK_FCM] reminder sent to token:', token);
-  //   return true;
-  // }
+  console.log("entered push notification")
+  if (process.env.MOCK_FCM === 'true') {
+    console.log('[MOCK_FCM] reminder sent to token:', token || '[empty]');
+    return true;
+  }
   
-  if (!token || !fcmEnabled) {
+  if (!token) {
+    console.warn('FCM delivery skipped: missing user fcmToken');
+    return false;
+  }
+
+  if (!fcmEnabled) {
+    console.warn('FCM delivery skipped: Firebase is not initialized');
     return false;
   }
 

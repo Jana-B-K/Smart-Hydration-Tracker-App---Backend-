@@ -36,8 +36,8 @@ function initializeFirebase() {
 
 initializeFirebase();
 
-export async function sendPushNotification(token) {
-  console.log("entered push notification")
+export async function sendPushNotification(username, token) {
+  console.log(username+ " entered push notification")
   if (process.env.MOCK_FCM === 'true') {
     console.log('[MOCK_FCM] reminder sent to token:', token || '[empty]');
     return true;
@@ -55,7 +55,7 @@ export async function sendPushNotification(token) {
 
   const message = {
     notification: {
-      title: 'Hydration Reminder',
+      title: `Hydration Reminder for ${username}`,
       body: 'Time to drink water',
     },
     token,

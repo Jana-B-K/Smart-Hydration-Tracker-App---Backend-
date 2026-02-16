@@ -8,7 +8,7 @@ import { evaluateReminder } from '../services/reminder.service.js';
 
 const debugReminder = process.env.DEBUG_REMINDER === 'true';
 
-cron.schedule('*/10 * * * * *', async () => {
+cron.schedule('*/1 * * * *', async () => {
   try {
     if (debugReminder) {
       console.log('[REMINDER_CRON] tick');
@@ -34,8 +34,36 @@ cron.schedule('*/10 * * * * *', async () => {
         }
         continue;
       }
-      const delivered = await sendPushNotification(user.fcmToken);
+      // Acquire a short lock so multiple app instances cannot send duplicate reminders.
+      const now = new Date();
+      const lockUntil = new Date(now.getTime() + 55 * 1000);
+      const claim = await Reminder.findOneAndUpdate(
+        {
+          _id: reminder._id,
+          $or: [
+            { sendingLockUntil: null },
+            { sendingLockUntil: { $lte: now } },
+          ],
+        },
+        {
+          $set: { sendingLockUntil: lockUntil },
+        },
+        { returnDocument: 'after' }
+      );
+
+      if (!claim) {
+        if (debugReminder) {
+          console.log(`[REMINDER_CRON] skipped reminder=${reminder._id}: lock held by another worker`);
+        }
+        continue;
+      }
+
+      const delivered = await sendPushNotification(user.name, user.fcmToken);
       if (!delivered) {
+        await Reminder.updateOne(
+          { _id: reminder._id },
+          { $set: { sendingLockUntil: null } }
+        );
         if (debugReminder) {
           console.log(`[REMINDER_CRON] delivery failed reminder=${reminder._id}`);
         }
@@ -43,6 +71,7 @@ cron.schedule('*/10 * * * * *', async () => {
       }
 
       reminder.lastReminderSent = new Date();
+      reminder.sendingLockUntil = null;
       await reminder.save();
       if (debugReminder) {
         console.log(`[REMINDER_CRON] delivered reminder=${reminder._id}`);

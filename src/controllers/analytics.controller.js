@@ -83,15 +83,55 @@ export const getStreakBadge = async (req, res, next) => {
 export const exportReport = async (req, res, next) => {
   try {
     const userId = req.user.id;
+    const user = await Users.findById(userId)
     const { start, end, format } = req.query;
+    const report = await analyticsService.getExportReport(userId, start, end);
+    const normalizedFormat = String(format || 'json').toLowerCase();
 
-    if (format === 'pdf') {
-      const err = new Error('PDF export not enabled on this server');
-      err.statusCode = 501;
+    if (normalizedFormat === 'pdf') {
+      const { default: PDFDocument } = await import('pdfkit');
+      const fileStamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `hydration-report-${fileStamp}.pdf`;
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+      const doc = new PDFDocument({ margin: 40, size: 'A4' });
+      doc.pipe(res);
+
+      doc.fontSize(18).text('Hydration Report', { align: 'center' });
+      doc.moveDown(0.5);
+      doc
+        .fontSize(10)
+        .text(`username: ${user.name}`)
+        .text(`User ID: ${userId}`)
+        .text(`Start: ${start || 'today'}`)
+        .text(`End: ${end || 'today'}`)
+        .text(`Generated: ${new Date().toISOString()}`);
+
+      doc.moveDown(1);
+      doc.fontSize(12).text('Daily Intake');
+      doc.moveDown(0.4);
+
+      let grandTotal = 0;
+      report.forEach((item, index) => {
+        const amount = Number(item.total) || 0;
+        grandTotal += amount;
+        doc.fontSize(10).text(`${index + 1}. ${item.day} - ${amount} ml`);
+      });
+
+      doc.moveDown(1);
+      doc.fontSize(12).text(`Total Intake: ${grandTotal} ml`);
+      doc.end();
+      return;
+    }
+
+    if (normalizedFormat !== 'json') {
+      const err = new Error("Invalid format. Use 'json' or 'pdf'.");
+      err.statusCode = 400;
       throw err;
     }
 
-    const report = await analyticsService.getExportReport(userId, start, end);
     res.status(200).json({ report, format: 'json' });
   } catch (err) {
     next(err);

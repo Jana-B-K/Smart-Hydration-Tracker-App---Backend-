@@ -41,6 +41,10 @@ const ReminderSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    sendingLockUntil: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

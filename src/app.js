@@ -9,8 +9,7 @@ import userRouter from './routers/user.router.js';
 import waterLogRouter from './routers/waterlog.router.js';
 import analyticsRouter from './routers/analytics.router.js';
 import reminderRouter from './routers/reminder.router.js';
-import './cron/reminder.cron.js';
-
+import { setupSwagger } from './swagger.js';
 const app = express();
 
 app.use(
@@ -21,6 +20,8 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+
+setupSwagger(app);
 
 app.use('/api/auth', authRouter);
 app.use('/user', authMiddleware, userRouter);

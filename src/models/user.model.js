@@ -47,6 +47,7 @@ const UserSchema = new mongoose.Schema(
         },
         userType: {
             type: String,
+            required:true,
             enum: ["Athlete", "Office worker", "Outdoor worker", "Pregnant", "Senior citizen"],
         },
         dailyGoal: {

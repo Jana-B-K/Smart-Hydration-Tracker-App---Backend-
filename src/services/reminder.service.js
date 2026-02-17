@@ -105,43 +105,60 @@ export const toggleSleepMode = async (userId) => {
   return reminder;
 };
 
-export const shouldSendReminder = async (reminder, user, todayIntake = 0) => {
-  console.log("should send reminder")
-  const { send } = await evaluateReminder(reminder, user, todayIntake);
-  return send;
+export const shouldSendReminder = (reminder, user, todayIntake = 0) => {
+  const result = evaluateReminder(reminder, user, todayIntake);
+  return result.send;
 };
 
-export const evaluateReminder = async (reminder, user, todayIntake = 0) => {
-  if (!reminder || !user) {
-    return { send: false, reason: 'missing reminder or user' };
-  }
-  if (!reminder.isActive) {
-    return { send: false, reason: 'reminder inactive' };
-  }
-  if (reminder.sleepMode) {
-    return { send: false, reason: 'sleep mode enabled' };
-  }
-  if (reminder.paused) {
-    return { send: false, reason: 'reminder paused' };
-  }
-  if (!isWithinSchedule(reminder.startTime, reminder.endTime)) {
-    return { send: false, reason: 'outside schedule window' };
-  }
+export const evaluateReminder = (reminder, user, todayIntake = 0) => {
+  // Basic validations
+  if (!reminder || !user)   return { send: false, reason: "Missing reminder or user" };
+  
 
+  if (!reminder.isActive)  return { send: false, reason: "Reminder is inactive" };
+  
+  if (reminder.sleepMode)  return { send: false, reason: "Sleep mode enabled" };
+
+  if (reminder.paused)  return { send: false, reason: "Reminder is paused" };
+
+  // Schedule check
+  const insideSchedule = isWithinSchedule(
+    reminder.startTime,
+    reminder.endTime
+  );
+
+  if (!insideSchedule)  return { send: false, reason: "Outside schedule window" };
+
+  // Daily goal check
   const dailyGoal = Number(user.dailyGoal);
-  if (Number.isFinite(dailyGoal) && dailyGoal > 0 && todayIntake >= dailyGoal) {
+
+  if (
+    Number.isFinite(dailyGoal) &&
+    dailyGoal > 0 &&
+    todayIntake >= dailyGoal
+  ) {
     return {
       send: false,
-      reason: `daily goal reached (${todayIntake}/${dailyGoal})`,
+      reason: `Daily goal reached (${todayIntake}/${dailyGoal})`,
     };
   }
 
-  if (reminder.lastReminderSent) {
-    const diffMinutes = (Date.now() - new Date(reminder.lastReminderSent).getTime()) / (1000 * 60);
-    if (diffMinutes < reminder.interval) {
-      return { send: false, reason: 'interval not reached yet' };
+  // Interval check
+  const intervalMinutes = Number(reminder.interval);
+
+  if (
+    reminder.lastReminderSent &&
+    Number.isFinite(intervalMinutes) &&
+    intervalMinutes > 0
+  ) {
+    const lastSentTime = new Date(reminder.lastReminderSent).getTime();
+    const minutesPassed = (Date.now() - lastSentTime) / (1000 * 60);
+
+    if (minutesPassed < intervalMinutes) {
+      return { send: false, reason: "Interval not reached yet" };
     }
   }
 
+  // If all checks pass
   return { send: true, reason: null };
 };

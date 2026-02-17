@@ -6,7 +6,7 @@ import getTotalForToday from '../utils/getTotalForToday.js';
 import { sendPushNotification } from '../services/fcm.service.js';
 import { evaluateReminder } from '../services/reminder.service.js';
 
-const debugReminder = process.env.DEBUG_REMINDER === 'true';
+const debugReminder = process.env.DEBUG_REMINDER === 'false';
 
 cron.schedule('*/1 * * * *', async () => {
   try {

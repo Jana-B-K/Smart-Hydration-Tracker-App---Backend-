@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: smart-hydration-tracker-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true

@@ -12,9 +12,27 @@ import reminderRouter from './routers/reminder.router.js';
 import { setupSwagger } from './swagger.js';
 const app = express();
 
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowAllOrigins =
+  process.env.CORS_ALLOW_ALL === 'true' || allowedOrigins.length === 0;
+
 app.use(
   cors({
-    origin: 'http://localhost:8081',
+    origin: (origin, callback) => {
+      // Requests from mobile clients/Postman may not include Origin.
+      if (!origin || allowAllOrigins || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      const err = new Error(`CORS blocked for origin: ${origin}`);
+      err.statusCode = 403;
+      callback(err);
+    },
     credentials: true,
   })
 );

@@ -47,7 +47,7 @@ export const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user._id},
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: '60m' }
+    { expiresIn: '5m' }
   );
 };
 

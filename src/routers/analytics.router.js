@@ -5,6 +5,7 @@ const analyticsRouter = Router();
 
 analyticsRouter.get('/weekly', analyticsController.getWeeklyData);
 analyticsRouter.get('/daily-history', analyticsController.getDailyHistory);
+analyticsRouter.get('/history-by-date', analyticsController.getHistoryByDate);
 analyticsRouter.get('/weekly-performance', analyticsController.getWeeklyPerformance);
 analyticsRouter.get('/monthly', analyticsController.getMonthlyAnalytics);
 analyticsRouter.get('/monthly-comparison', analyticsController.getMonthlyComparison);

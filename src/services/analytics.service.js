@@ -111,6 +111,41 @@ export const getMonthlyAnalytics = async (id) => {
   return data;
 };
 
+export const getHistoryByDate = async (id, dateInput) => {
+  const userId = toObjectId(id);
+
+  if (!dateInput) {
+    const err = new Error('date query is required (YYYY-MM-DD)');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const parsedDate = new Date(dateInput);
+  if (Number.isNaN(parsedDate.getTime())) {
+    const err = new Error('Invalid date format. Use YYYY-MM-DD');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const dayStart = getStartDay(parsedDate);
+
+  const logs = await WaterLog.find({
+    userId,
+    day: dayStart,
+  })
+    .sort({ createdAt: 1 })
+    .lean();
+
+  const total = logs.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+  return {
+    day: toDayKey(dayStart),
+    total,
+    logs,
+  };
+};
+  
+
 export const getDailyHistory = async (id, days = 7) => {
   const userId = toObjectId(id);
   const rangeDays = Number(days);

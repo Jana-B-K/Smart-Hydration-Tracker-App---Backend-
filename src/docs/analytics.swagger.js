@@ -27,6 +27,45 @@
  *           type: number
  *           example: 2400
  *
+ *     WaterLogItem:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: 67b1c5714f8b92a2f4ec90ab
+ *         userId:
+ *           type: string
+ *           example: 67b1c5714f8b92a2f4ec5678
+ *         amount:
+ *           type: number
+ *           example: 250
+ *         day:
+ *           type: string
+ *           format: date-time
+ *           example: 2026-02-19T00:00:00.000Z
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: 2026-02-19T09:10:05.000Z
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: 2026-02-19T09:10:05.000Z
+ *
+ *     HistoryByDateResponse:
+ *       type: object
+ *       properties:
+ *         day:
+ *           type: string
+ *           example: 2026-02-19
+ *         total:
+ *           type: number
+ *           example: 1250
+ *         logs:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/WaterLogItem'
+ *
  *     WeeklyPerformanceResponse:
  *       type: object
  *       properties:
@@ -155,6 +194,35 @@
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/DailyHistoryItem'
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ *
+ * /analytics/history-by-date:
+ *   get:
+ *     tags: [Analytics]
+ *     summary: Get all water logs for a specific day
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2026-02-19
+ *         required: true
+ *         description: Day to fetch logs for, in YYYY-MM-DD format (UTC day).
+ *     responses:
+ *       200:
+ *         description: Water logs and total for the requested day
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HistoryByDateResponse'
+ *       400:
+ *         description: Missing or invalid date query
  *       401:
  *         description: Unauthorized
  *       500:

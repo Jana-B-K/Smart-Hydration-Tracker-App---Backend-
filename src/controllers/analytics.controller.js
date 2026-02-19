@@ -22,6 +22,17 @@ export const getDailyHistory = async (req, res, next) => {
   }
 };
 
+export const getHistoryByDate = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { date } = req.query;
+    const result = await analyticsService.getHistoryByDate(userId, date);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getWeeklyPerformance = async (req, res, next) => {
   try {
     const userId = req.user.id;

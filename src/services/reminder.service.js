@@ -33,6 +33,14 @@ function isWithinSchedule(startTime, endTime, now = new Date()) {
   return current >= start || current <= end;
 }
 
+function minutesToTime(totalMinutes) {
+  const dayMinutes = 24 * 60;
+  const normalized = ((totalMinutes % dayMinutes) + dayMinutes) % dayMinutes;
+  const hours = Math.floor(normalized / 60);
+  const minutes = normalized % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
 function buildNotFoundError(message) {
   const err = new Error(message);
   err.statusCode = 404;
@@ -84,7 +92,8 @@ export const getReminder = async (userId) => {
 };
 
 export const pauseReminder = async (userId, data) => {
-  const { pauseStartTime, pauseEndTime } = data;
+  const { pauseStartTime } = data;
+  const pauseEndTime = data.pauseEndTime === '00:00' ? null : data.pauseEndTime;
 
   const reminder = await Reminder.findOne({ userId });
   if (!reminder) {
@@ -103,15 +112,44 @@ export const pauseReminder = async (userId, data) => {
     return reminder;
   }
 
-  if (!isValidTimeString(pauseStartTime) || !isValidTimeString(pauseEndTime)) {
-    const err = new Error('pauseStartTime and pauseEndTime must be in HH:mm format');
+  if (pauseStartTime == null && pauseEndTime != null) {
+    const err = new Error('pauseStartTime is required when pauseEndTime is provided');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (!isValidTimeString(pauseStartTime)) {
+    const err = new Error('pauseStartTime must be in HH:mm format');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  let resolvedPauseStartTime = pauseStartTime;
+  let resolvedPauseEndTime = pauseEndTime;
+
+  if (pauseEndTime == null) {
+    const durationMinutes = timeToMinutes(pauseStartTime);
+    if (durationMinutes == null || durationMinutes <= 0) {
+      const err = new Error('pauseStartTime duration must be greater than 00:00');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    resolvedPauseStartTime = minutesToTime(nowMinutes);
+    resolvedPauseEndTime = minutesToTime(nowMinutes + durationMinutes);
+  }
+
+  if (!isValidTimeString(resolvedPauseEndTime)) {
+    const err = new Error('pauseEndTime must be in HH:mm format');
     err.statusCode = 400;
     throw err;
   }
 
   reminder.paused = false;
-  reminder.pauseStartTime = pauseStartTime;
-  reminder.pauseEndTime = pauseEndTime;
+  reminder.pauseStartTime = resolvedPauseStartTime;
+  reminder.pauseEndTime = resolvedPauseEndTime;
   await reminder.save();
   return reminder;
 };

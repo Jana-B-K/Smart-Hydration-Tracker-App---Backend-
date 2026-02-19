@@ -71,13 +71,13 @@
  *           type: string
  *           nullable: true
  *           pattern: '^([01]\\d|2[0-3]):([0-5]\\d)$'
- *           example: "13:00"
+ *           example: "00:05"
  *         pauseEndTime:
  *           type: string
  *           nullable: true
  *           pattern: '^([01]\\d|2[0-3]):([0-5]\\d)$'
  *           example: "15:00"
- *       description: Send both times to set a pause window. Send both as null to clear pause window.
+ *       description: Send both times to pause for an exact clock-time window. Send only pauseStartTime (e.g. 00:05) to pause for that duration from now. Send both as null to clear pause window.
  *
  *     ReminderResponse:
  *       type: object
@@ -237,7 +237,7 @@
  *             schema:
  *               $ref: '#/components/schemas/ReminderResponse'
  *       400:
- *         description: pauseStartTime and pauseEndTime must be in HH:mm format
+ *         description: Invalid pause payload (time format, duration, or missing required start time)
  *         content:
  *           application/json:
  *             schema:

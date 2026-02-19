@@ -2,6 +2,12 @@ import Reminder from '../models/reminder.model.js';
 import User from '../models/user.model.js';
 import { getUserTypeConfig } from '../utils/profileAdjustments.js';
 
+const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+function isValidTimeString(value) {
+  return typeof value === 'string' && TIME_REGEX.test(value);
+}
+
 function timeToMinutes(timeStr) {
   const [h, m] = String(timeStr).split(':').map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) {
@@ -77,19 +83,35 @@ export const getReminder = async (userId) => {
   return reminder;
 };
 
-export const pauseReminder = async (userId, paused = false) => {
-  if (typeof paused !== 'boolean') {
-    const err = new Error('paused must be boolean');
-    err.statusCode = 400;
-    throw err;
-  }
+export const pauseReminder = async (userId, data) => {
+  const { pauseStartTime, pauseEndTime } = data;
 
   const reminder = await Reminder.findOne({ userId });
   if (!reminder) {
     throw buildNotFoundError('Reminder not found for this user');
   }
 
-  reminder.paused = paused;
+  const clearPauseWindow =
+    pauseStartTime == null &&
+    pauseEndTime == null;
+
+  if (clearPauseWindow) {
+    reminder.paused = false;
+    reminder.pauseStartTime = null;
+    reminder.pauseEndTime = null;
+    await reminder.save();
+    return reminder;
+  }
+
+  if (!isValidTimeString(pauseStartTime) || !isValidTimeString(pauseEndTime)) {
+    const err = new Error('pauseStartTime and pauseEndTime must be in HH:mm format');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  reminder.paused = false;
+  reminder.pauseStartTime = pauseStartTime;
+  reminder.pauseEndTime = pauseEndTime;
   await reminder.save();
   return reminder;
 };
@@ -119,7 +141,10 @@ export const evaluateReminder = (reminder, user, todayIntake = 0) => {
   
   if (reminder.sleepMode)  return { send: false, reason: "Sleep mode enabled" };
 
-  if (reminder.paused)  return { send: false, reason: "Reminder is paused" };
+  const hasPauseWindow = Boolean(reminder.pauseStartTime && reminder.pauseEndTime);
+  if (hasPauseWindow && isWithinSchedule(reminder.pauseStartTime, reminder.pauseEndTime)) {
+    return { send: false, reason: "Reminder is paused" };
+  }
 
   // Schedule check
   const insideSchedule = isWithinSchedule(

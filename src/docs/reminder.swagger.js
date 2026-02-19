@@ -66,12 +66,18 @@
  *
  *     PauseReminderRequest:
  *       type: object
- *       required:
- *         - paused
  *       properties:
- *         paused:
- *           type: boolean
- *           example: true
+ *         pauseStartTime:
+ *           type: string
+ *           nullable: true
+ *           pattern: '^([01]\\d|2[0-3]):([0-5]\\d)$'
+ *           example: "13:00"
+ *         pauseEndTime:
+ *           type: string
+ *           nullable: true
+ *           pattern: '^([01]\\d|2[0-3]):([0-5]\\d)$'
+ *           example: "15:00"
+ *       description: Send both times to set a pause window. Send both as null to clear pause window.
  *
  *     ReminderResponse:
  *       type: object
@@ -100,6 +106,14 @@
  *         paused:
  *           type: boolean
  *           example: false
+ *         pauseStartTime:
+ *           type: string
+ *           nullable: true
+ *           example: "13:00"
+ *         pauseEndTime:
+ *           type: string
+ *           nullable: true
+ *           example: "15:00"
  *         lastReminderSent:
  *           type: string
  *           format: date-time
@@ -223,7 +237,7 @@
  *             schema:
  *               $ref: '#/components/schemas/ReminderResponse'
  *       400:
- *         description: paused must be boolean
+ *         description: pauseStartTime and pauseEndTime must be in HH:mm format
  *         content:
  *           application/json:
  *             schema:

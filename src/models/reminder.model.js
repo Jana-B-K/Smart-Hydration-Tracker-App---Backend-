@@ -37,6 +37,16 @@ const ReminderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    pauseStartTime: {
+      type: String,
+      default: null,
+      match: timeRegex,
+    },
+    pauseEndTime: {
+      type: String,
+      default: null,
+      match: timeRegex,
+    },
     lastReminderSent: {
       type: Date,
       default: null,

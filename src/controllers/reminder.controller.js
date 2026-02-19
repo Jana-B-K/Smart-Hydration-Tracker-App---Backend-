@@ -35,8 +35,8 @@ export const getReminder = async (req, res, next) => {
 export const pauseReminder = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { paused } = req.body;
-    const reminder = await reminderService.pauseReminder(userId, paused);
+    const data = req.body;
+    const reminder = await reminderService.pauseReminder(userId, data);
     res.status(200).json(reminder);
   } catch (err) {
     next(err);

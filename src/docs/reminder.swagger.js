@@ -17,6 +17,11 @@
  *           minimum: 1
  *           description: Minutes between reminders. If omitted, service may derive from user type.
  *           example: 60
+ *         notificationMessage:
+ *           type: string
+ *           maxLength: 160
+ *           nullable: true
+ *           example: "Hydrate now! Keep your streak going."
  *         startTime:
  *           type: string
  *           pattern: '^([01]\\d|2[0-3]):([0-5]\\d)$'
@@ -42,6 +47,11 @@
  *           type: number
  *           minimum: 1
  *           example: 45
+ *         notificationMessage:
+ *           type: string
+ *           maxLength: 160
+ *           nullable: true
+ *           example: "Take a water break."
  *         startTime:
  *           type: string
  *           pattern: '^([01]\\d|2[0-3]):([0-5]\\d)$'
@@ -91,6 +101,10 @@
  *         interval:
  *           type: number
  *           example: 60
+ *         notificationMessage:
+ *           type: string
+ *           nullable: true
+ *           example: "Hydrate now! Keep your streak going."
  *         startTime:
  *           type: string
  *           example: "08:00"

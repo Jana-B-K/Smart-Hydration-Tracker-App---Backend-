@@ -58,7 +58,7 @@ cron.schedule('*/1 * * * *', async () => {
         continue;
       }
 
-      const delivered = await sendPushNotification(user.name, user.fcmToken);
+      const delivered = await sendPushNotification(user.name, user.fcmToken, reminder.notificationMessage);
       if (!delivered) {
         await Reminder.updateOne(
           { _id: reminder._id },

@@ -36,7 +36,7 @@ function initializeFirebase() {
 
 initializeFirebase();
 
-export async function sendPushNotification(username, token) {
+export async function sendPushNotification(username, token, notificationMessage) {
   console.log(username+ " entered push notification")
   if (process.env.MOCK_FCM === 'true') {
     console.log('[MOCK_FCM] reminder sent to token:', token || '[empty]');
@@ -52,11 +52,11 @@ export async function sendPushNotification(username, token) {
     console.warn('FCM delivery skipped: Firebase is not initialized');
     return false;
   }
-
+  const fcmMessage = notificationMessage ? notificationMessage : 'Time to drink water';
   const message = {
     notification: {
       title: `Hydration Reminder for ${username}`,
-      body: 'Time to drink water',
+      body: fcmMessage,
     },
     token,
   };

@@ -10,6 +10,12 @@ const ReminderSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    notificationMessage: {
+      type: String,
+      trim: true,
+      maxlength: 160,
+      default: null,
+    },
     interval: {
       type: Number,
       required: true,
